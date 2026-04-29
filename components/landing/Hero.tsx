@@ -120,7 +120,7 @@ export default function Hero() {
               style={{ animation: 'bounceSoft 3.2s ease-in-out infinite 0.6s' }}
             >
               <div className="w-10 h-10 rounded-xl overflow-hidden relative flex-shrink-0 bg-red-50">
-                <Image src="/images/mix-enchilado.jpg" alt="Mix enchilado" fill className="object-cover" />
+                <Image src="/images/mango.jpg" alt="Mix enchilado" fill className="object-cover" />
               </div>
               <div>
                 <p className="text-xs font-bold text-stone-900 leading-none">Mix Enchilado</p>
