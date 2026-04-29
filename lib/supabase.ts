@@ -1,9 +1,12 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase: SupabaseClient | null =
+  supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : null
 
 // ── Tipos de BD ──────────────────────────────────────────────────────────────
 export type DbProduct = {
@@ -130,6 +133,8 @@ export async function createOrder(data: {
   total: number
   items: { productId: string; productName: string; quantity: number; unitPrice: number }[]
 }) {
+  if (!supabase) return { success: false, error: 'Supabase not configured' }
+
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
