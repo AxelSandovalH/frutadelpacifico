@@ -18,7 +18,7 @@ export default function Footer() {
             Antójate de lo natural. Fruta deshidratada 100% pura, sin conservadores, con sabor intenso.
           </p>
           <div className="flex gap-3 mt-4">
-            <a href="https://instagram.com" aria-label="Instagram" className="text-stone-400 hover:text-orange-400 transition-colors font-bold text-sm">IG</a>
+            <a href="https://www.instagram.com/frutadelpacifico/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-stone-400 hover:text-orange-400 transition-colors font-bold text-sm">IG</a>
             <a href="https://facebook.com" aria-label="Facebook" className="text-stone-400 hover:text-orange-400 transition-colors font-bold text-sm">FB</a>
             <a href="mailto:hola@frutadelpacifico.mx" aria-label="Email" className="text-stone-400 hover:text-orange-400 transition-colors">
               <Mail size={20} />
