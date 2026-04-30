@@ -18,7 +18,7 @@ export function buildWhatsAppMessage(items: CartItem[], form: OrderFormData, tot
   const address = [form.address, form.colonia, form.city].filter(Boolean).join(', ')
 
   const message = [
-    `¡Hola! Quiero hacer un pedido de Fruta del Pacífico 🌴`,
+    `¡Hola! Quiero hacer un pedido de Fruta del Pacífico.`,
     ``,
     `*Mi pedido:*`,
     itemLines,
@@ -26,12 +26,12 @@ export function buildWhatsAppMessage(items: CartItem[], form: OrderFormData, tot
     `*Total: ${formatPrice(total)}*`,
     ``,
     `*Datos de entrega:*`,
-    `👤 Nombre: ${form.name}`,
-    `📱 Teléfono: ${form.phone}`,
-    `📍 Dirección: ${address}`,
-    form.notes ? `📝 Notas: ${form.notes}` : null,
+    `Nombre: ${form.name}`,
+    `Telefono: ${form.phone}`,
+    `Direccion: ${address}`,
+    form.notes ? `Notas: ${form.notes}` : null,
     ``,
-    `¡Gracias! 🙌`,
+    `Gracias.`,
   ]
     .filter((line) => line !== null)
     .join('\n')

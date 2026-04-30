@@ -22,7 +22,7 @@ export function calcSavingsPercent(original: number, sale: number): number {
 }
 
 export const FREE_SHIPPING_THRESHOLD = 350
-export const WHATSAPP_NUMBER = '523122265985'
+export const WHATSAPP_NUMBER = '523141222146'
 
 export function getShippingProgress(total: number): number {
   return Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100)
