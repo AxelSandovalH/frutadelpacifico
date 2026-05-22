@@ -77,9 +77,20 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-stone-800 px-4 sm:px-6 py-5 text-center">
+      <div className="border-t border-stone-800 px-4 sm:px-6 py-5 text-center space-y-1">
         <p className="text-xs text-stone-500">
           © {new Date().getFullYear()} Fruta del Pacífico · Hecho con 🧡 en México · Todos los derechos reservados
+        </p>
+        <p className="text-xs text-stone-600">
+          Desarrollado por{' '}
+          <a
+            href="https://axelsandoval.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-stone-400 hover:text-orange-400 transition-colors font-medium"
+          >
+            axelsandoval.dev
+          </a>
         </p>
       </div>
     </footer>
