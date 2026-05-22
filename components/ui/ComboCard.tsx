@@ -62,7 +62,7 @@ export default function ComboCard({ combo, featured }: ComboCardProps) {
       </div>
 
       {/* Imagen */}
-      <div className="relative h-44 overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50">
+      <div className="relative h-36 sm:h-44 overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50">
         {!imgLoaded && !imgError && <div className="absolute inset-0 skeleton" />}
         {!imgError ? (
           <Image

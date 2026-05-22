@@ -33,7 +33,7 @@ export default function RecetasPage() {
               href={`/recetas/${recipe.slug}`}
               className="group bg-white rounded-2xl border border-stone-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex gap-0"
             >
-              <div className="w-32 sm:w-40 bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center text-6xl flex-shrink-0">
+              <div className="w-24 sm:w-32 lg:w-40 bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center text-5xl sm:text-6xl flex-shrink-0">
                 {recipe.emoji}
               </div>
               <div className="p-5 flex flex-col gap-2">

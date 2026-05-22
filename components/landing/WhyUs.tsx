@@ -45,7 +45,7 @@ export default function WhyUs() {
       <div className="grid lg:grid-cols-2 min-h-[640px]">
 
         {/* Imagen lateral */}
-        <div className="relative h-72 lg:h-auto order-2 lg:order-1">
+        <div className="relative h-52 sm:h-72 lg:h-auto order-2 lg:order-1">
           <Image
             src="/images/mango.jpg"
             alt="Mango deshidratado Fruta del Pacífico"
@@ -67,14 +67,14 @@ export default function WhyUs() {
         </div>
 
         {/* Contenido */}
-        <div className="order-1 lg:order-2 py-14 px-6 sm:px-10 lg:px-14 flex flex-col justify-center">
+        <div className="order-1 lg:order-2 py-8 sm:py-14 px-4 sm:px-10 lg:px-14 flex flex-col justify-center">
           <span className="inline-block text-orange-500 font-bold text-xs uppercase tracking-widest mb-3">
             ¿Por qué elegirnos?
           </span>
           <h2 className="text-3xl sm:text-4xl font-black text-stone-900 leading-tight">
             No somos solo<br />fruta deshidratada.
           </h2>
-          <p className="text-stone-500 text-lg mt-3 mb-10 leading-relaxed">
+          <p className="text-stone-500 text-base sm:text-lg mt-3 mb-6 sm:mb-10 leading-relaxed">
             Somos tu snack de confianza: natural, honesto, con sabor de verdad.
           </p>
 
@@ -89,7 +89,7 @@ export default function WhyUs() {
                 </div>
                 <div>
                   <h3 className="font-bold text-stone-900 text-sm leading-tight">{title}</h3>
-                  <p className="text-stone-500 text-xs mt-1 leading-relaxed">{desc}</p>
+                  <p className="text-stone-500 text-sm mt-1 leading-relaxed">{desc}</p>
                 </div>
               </div>
             ))}

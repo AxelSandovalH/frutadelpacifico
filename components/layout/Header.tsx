@@ -112,7 +112,7 @@ export default function Header() {
               key={href}
               href={href}
               onClick={() => setOpen(false)}
-              className="py-3 px-4 rounded-xl text-sm font-semibold text-stone-700 hover:bg-green-50 hover:text-[#1a5c2e] active:bg-green-100 transition-colors"
+              className="py-4 px-4 rounded-xl text-sm font-semibold text-stone-700 hover:bg-green-50 hover:text-[#1a5c2e] active:bg-green-100 transition-colors"
             >
               {label}
             </Link>
@@ -122,7 +122,7 @@ export default function Header() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
-            className="mt-2 py-3 px-4 rounded-xl text-sm font-bold bg-[#25D366] text-white text-center hover:bg-[#1ebe5d] active:bg-[#19a851] transition-colors"
+            className="mt-2 py-4 px-4 rounded-xl text-sm font-bold bg-[#25D366] text-white text-center hover:bg-[#1ebe5d] active:bg-[#19a851] transition-colors"
           >
             💬 Pedir por WhatsApp
           </a>

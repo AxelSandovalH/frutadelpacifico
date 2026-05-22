@@ -69,7 +69,7 @@ function FormField({ fieldKey, label, placeholder, type = 'text', value, error, 
           onChange={(e) => onChange(fieldKey, e.target.value)}
           onBlur={() => onBlur(fieldKey)}
           className={[
-            'w-full px-4 py-3 pr-10 rounded-xl border text-sm transition-all duration-200',
+            'w-full px-4 py-3.5 pr-10 rounded-xl border text-sm transition-all duration-200',
             'focus:outline-none focus:ring-2',
             hasError
               ? 'border-red-400 bg-red-50 focus:ring-red-300'
@@ -242,7 +242,7 @@ export default function CheckoutPage() {
                 placeholder="¿Horario preferido de entrega, instrucciones especiales...?"
                 value={form.notes}
                 onChange={(e) => handleChange('notes', e.target.value)}
-                rows={3}
+                rows={2}
                 className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:bg-white focus:border-orange-400 transition-all duration-200 resize-none"
               />
             </div>

@@ -174,20 +174,20 @@ export default function CartSidebar() {
                   <div className="flex items-center border border-stone-200 rounded-lg overflow-hidden text-sm">
                     <button
                       onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                      className="px-2 py-1.5 hover:bg-stone-100 active:bg-stone-200 transition-colors"
+                      className="px-3 py-2 hover:bg-stone-100 active:bg-stone-200 transition-colors"
                       aria-label="Reducir cantidad"
                     >
-                      <Minus size={12} />
+                      <Minus size={14} />
                     </button>
-                    <span className="px-2.5 font-bold text-stone-900 min-w-[28px] text-center">
+                    <span className="px-3 font-bold text-stone-900 min-w-[32px] text-center">
                       {item.quantity}
                     </span>
                     <button
                       onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                      className="px-2 py-1.5 hover:bg-stone-100 active:bg-stone-200 transition-colors"
+                      className="px-3 py-2 hover:bg-stone-100 active:bg-stone-200 transition-colors"
                       aria-label="Aumentar cantidad"
                     >
-                      <Plus size={12} />
+                      <Plus size={14} />
                     </button>
                   </div>
                 </div>

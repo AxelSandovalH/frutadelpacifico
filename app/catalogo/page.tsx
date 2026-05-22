@@ -36,10 +36,10 @@ export default function CatalogoPage() {
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white py-14 px-4 sm:px-6">
+      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white py-10 sm:py-14 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl font-black mb-3">Nuestro Catálogo 🌴</h1>
-          <p className="text-orange-100 text-lg max-w-lg mx-auto">
+          <h1 className="text-3xl sm:text-5xl font-black mb-3">Nuestro Catálogo 🌴</h1>
+          <p className="text-orange-100 text-base sm:text-lg max-w-lg mx-auto">
             Fruta deshidratada 100% natural. Sin conservadores, con sabor intenso.
           </p>
         </div>
@@ -58,24 +58,24 @@ export default function CatalogoPage() {
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <div className="flex flex-col gap-3 mb-6">
           {/* Category filters */}
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setActiveCategory('todos')}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                 activeCategory === 'todos'
                   ? 'bg-stone-900 text-white'
                   : 'bg-white border border-stone-200 text-stone-600 hover:border-orange-300'
               }`}
             >
-              Todas las categorías
+              Todas
             </button>
             {categories.map((cat) => (
               <button
                 key={cat.slug}
                 onClick={() => setActiveCategory(cat.slug as CategorySlug)}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                   activeCategory === cat.slug
                     ? 'bg-stone-900 text-white'
                     : 'bg-white border border-stone-200 text-stone-600 hover:border-orange-300'
@@ -88,12 +88,12 @@ export default function CatalogoPage() {
         </div>
 
         {/* Tag filters */}
-        <div className="flex gap-2 flex-wrap mb-8">
+        <div className="flex gap-2 flex-wrap mb-6">
           {tagFilters.map(({ value, label }) => (
             <button
               key={value}
               onClick={() => setActiveTag(value)}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-all ${
+              className={`px-2.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all ${
                 activeTag === value
                   ? 'bg-orange-500 text-white'
                   : 'bg-white border border-stone-200 text-stone-600 hover:border-orange-300'
@@ -125,7 +125,7 @@ export default function CatalogoPage() {
 
         {/* 3x2 promo banner */}
         <div className="mt-12 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl p-6 text-white text-center">
-          <h3 className="font-black text-2xl mb-1">🎁 Oferta 3x2</h3>
+          <h3 className="font-black text-xl sm:text-2xl mb-1">🎁 Oferta 3x2</h3>
           <p className="text-orange-100">
             Compra 3 productos del mismo tipo y el más barato va de regalo. ¡Se aplica automáticamente!
           </p>

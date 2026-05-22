@@ -27,7 +27,7 @@ export default function BestSellers() {
         </div>
 
         {/* Grid de productos */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
           {bestsellers.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
@@ -36,7 +36,7 @@ export default function BestSellers() {
         {/* Promo strip 3x2 */}
         <div className="mt-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-5 shadow-lg shadow-orange-500/20">
           <div>
-            <p className="font-black text-xl sm:text-2xl">🎁 3x2 en cítricos</p>
+            <p className="font-black text-lg sm:text-2xl">🎁 3x2 en cítricos</p>
             <p className="text-orange-100 text-sm mt-1.5 max-w-sm">
               Compra 3 y el más barato es gratis. ¡Se aplica automáticamente!
             </p>

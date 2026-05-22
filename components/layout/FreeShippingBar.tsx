@@ -17,7 +17,7 @@ export default function FreeShippingBar() {
     <div className={`text-center py-2 px-4 text-xs font-medium transition-colors ${reached ? 'bg-green-500 text-white' : 'bg-stone-900 text-white'}`}>
       {mounted ? getShippingMessage(total) : 'Te faltan $350 para entrega gratis'}
       {!reached && (
-        <div className="w-48 h-1 bg-white/20 rounded-full mx-auto mt-1 overflow-hidden">
+        <div className="w-full max-w-[200px] h-1 bg-white/20 rounded-full mx-auto mt-1 overflow-hidden">
           <div
             className="h-full bg-orange-400 rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }}

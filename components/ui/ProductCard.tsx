@@ -88,7 +88,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
           className={[
             'absolute bottom-3 right-3 z-10 p-2.5 rounded-full shadow-lg',
             'border-2 transition-all duration-200',
-            'md:opacity-0 md:translate-y-2 md:group-hover:opacity-100 md:group-hover:translate-y-0',
+            'opacity-100 md:opacity-0 md:translate-y-2 md:group-hover:opacity-100 md:group-hover:translate-y-0',
             added
               ? 'bg-green-500 border-green-500 text-white scale-110'
               : 'bg-white border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white active:scale-90',

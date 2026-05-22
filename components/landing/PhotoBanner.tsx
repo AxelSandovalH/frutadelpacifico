@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export default function PhotoBanner() {
   return (
-    <section className="relative h-80 sm:h-96 overflow-hidden flex items-center justify-center">
+    <section className="relative h-64 sm:h-80 lg:h-96 overflow-hidden flex items-center justify-center">
 
       {/* Foto sin gradientes */}
       <div className="absolute inset-0 z-0">
@@ -17,7 +17,7 @@ export default function PhotoBanner() {
       </div>
 
       {/* Texto en tarjeta glass centrada */}
-      <div className="relative z-10 bg-white/75 backdrop-blur-md rounded-3xl px-10 py-8 text-center shadow-2xl max-w-xl mx-4">
+      <div className="relative z-10 bg-white/75 backdrop-blur-md rounded-3xl px-5 py-6 sm:px-10 sm:py-8 text-center shadow-2xl max-w-xl mx-4">
         <p className="text-orange-500 font-bold text-xs uppercase tracking-widest mb-2">
           Cosechado · Deshidratado · Empacado en Manzanillo
         </p>

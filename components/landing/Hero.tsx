@@ -26,18 +26,18 @@ export default function Hero() {
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-16 grid md:grid-cols-2 gap-10 items-center">
 
         {/* Copy en tarjeta glassmorphic — mayor opacidad y sombra para contraste */}
-        <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-7 sm:p-10 shadow-2xl shadow-black/20 border border-white/60">
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-5 sm:p-10 shadow-2xl shadow-black/20 border border-white/60">
 
           <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-600 text-xs font-bold px-4 py-2 rounded-full mb-6">
             🌿 100% Natural · Sin conservadores · Sin culpa
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-stone-900 leading-[1.1] tracking-tight">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-stone-900 leading-[1.1] tracking-tight">
             Antójate <br />
             <span className="text-orange-500">de lo natural</span>&nbsp;🌴
           </h1>
 
-          <p className="mt-5 text-base sm:text-lg text-stone-600 leading-relaxed max-w-lg">
+          <p className="mt-3 sm:mt-5 text-sm sm:text-lg text-stone-600 leading-relaxed max-w-lg">
             Fruta deshidratada con sabor <strong className="text-stone-800">brutal</strong>.
             Piña, kiwi, mix enchilado y más — sin conservadores, pura fruta del Pacífico.
           </p>
