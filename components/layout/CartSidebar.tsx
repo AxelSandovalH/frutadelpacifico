@@ -119,7 +119,7 @@ export default function CartSidebar() {
           </div>
           {progress < 100 && (
             <p className="text-[10px] text-stone-400 text-right mt-1">
-              Gratis a partir de {formatPrice(FREE_SHIPPING_THRESHOLD)}
+              Entrega gratis a partir de {formatPrice(FREE_SHIPPING_THRESHOLD)}
             </p>
           )}
         </div>

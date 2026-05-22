@@ -12,8 +12,8 @@ const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Fruta del Pacífico — Snacks naturales con sabor intenso',
   description:
-    'Fruta deshidratada 100% natural, sin conservadores. Snacks premium con sabor intenso: limón, naranja, piña, fresa, mix enchilado y más. Envíos a toda México.',
-  keywords: 'fruta deshidratada, snacks saludables, sin conservadores, mix enchilado, México',
+    'Fruta deshidratada 100% natural, sin conservadores. Snacks premium con sabor intenso: limón, naranja, piña, fresa, mix enchilado y más. Entrega local en Manzanillo, Colima.',
+  keywords: 'fruta deshidratada, snacks saludables, sin conservadores, mix enchilado, Manzanillo, Colima',
   openGraph: {
     title: 'Fruta del Pacífico — Antójate de lo natural',
     description: 'Snacks 100% naturales con sabor intenso. Sin conservadores, sin culpa.',

@@ -70,7 +70,7 @@ export default function Testimonials() {
           <p className="text-stone-500 text-sm">
             ¿Ya eres fan?{' '}
             <a
-              href="https://wa.me/523122265985"
+              href="https://wa.me/523141222146"
               target="_blank"
               rel="noopener noreferrer"
               className="text-orange-500 font-bold hover:underline"

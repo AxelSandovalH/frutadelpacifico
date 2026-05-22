@@ -64,24 +64,6 @@ export default function Hero() {
             </Link>
           </div>
 
-          {/* Social proof */}
-          <div className="mt-6 flex items-center gap-3">
-            <div className="flex -space-x-2">
-              {['MG', 'SL', 'RA', 'KP'].map((initials, i) => (
-                <div
-                  key={i}
-                  className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                  style={{ background: ['#f97316', '#16a34a', '#d4940a', '#ea580c'][i] }}
-                >
-                  {initials}
-                </div>
-              ))}
-            </div>
-            <p className="text-sm text-stone-600">
-              ⭐⭐⭐⭐⭐{' '}
-              <span className="font-bold text-stone-800">+500 clientes felices</span>
-            </p>
-          </div>
         </div>
 
         {/* Foto circular — solo desktop */}

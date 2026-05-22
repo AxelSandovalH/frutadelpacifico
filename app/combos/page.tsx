@@ -49,7 +49,7 @@ export default function CombosPage() {
             Si quieres armar tu propio pack, escríbenos por WhatsApp y lo cotizamos juntos. Sin problema.
           </p>
           <a
-            href="https://wa.me/523122265985?text=Hola!%20Quiero%20armar%20un%20combo%20personalizado%20🌴"
+            href="https://wa.me/523141222146?text=Hola!%20Quiero%20armar%20un%20combo%20personalizado%20🌴"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-[#25D366] text-white font-bold px-6 py-3 rounded-xl hover:bg-[#20b858] transition-colors"

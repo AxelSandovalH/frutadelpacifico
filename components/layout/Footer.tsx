@@ -66,7 +66,7 @@ export default function Footer() {
           <h4 className="font-bold text-sm uppercase tracking-wider text-stone-300 mb-4">Pedidos</h4>
           <p className="text-sm text-stone-400 mb-3">¿Preguntas? Escríbenos directo.</p>
           <a
-            href="https://wa.me/523122265985"
+            href="https://wa.me/523141222146"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-[#25D366] text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-[#20b858] transition-colors"

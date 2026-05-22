@@ -15,7 +15,7 @@ const INITIAL_FORM: CheckoutForm = {
   phone:   '',
   address: '',
   colonia: '',
-  city:    '',
+  city:    'Manzanillo',
   notes:   '',
 }
 
@@ -195,12 +195,16 @@ export default function CheckoutPage() {
               📍 Datos de entrega
             </h2>
 
+            <div className="flex items-start gap-2 bg-orange-50 border border-orange-100 rounded-xl px-4 py-3 text-sm text-orange-700">
+              <span className="text-base leading-none mt-0.5">🛵</span>
+              <span>Por el momento solo realizamos entregas locales en <strong>Manzanillo, Colima</strong>.</span>
+            </div>
+
             {([
-              { key: 'name' as const,    label: 'Nombre completo',      placeholder: 'Ej: Ana García López',       type: 'text', required: true  },
-              { key: 'phone' as const,   label: 'WhatsApp / Teléfono',  placeholder: 'Ej: 6141234567 (10 dígitos)', type: 'tel',  required: true  },
-              { key: 'address' as const, label: 'Dirección',            placeholder: 'Calle, número, referencias', type: 'text', required: true  },
-              { key: 'colonia' as const, label: 'Colonia',              placeholder: 'Ej: Centro',                 type: 'text', required: false },
-              { key: 'city' as const,    label: 'Ciudad',               placeholder: 'Ej: Culiacán, Sinaloa',      type: 'text', required: true  },
+              { key: 'name' as const,    label: 'Nombre completo',     placeholder: 'Ej: Ana García López',        type: 'text', required: true  },
+              { key: 'phone' as const,   label: 'WhatsApp / Teléfono', placeholder: 'Ej: 3141234567 (10 dígitos)', type: 'tel',  required: true  },
+              { key: 'address' as const, label: 'Dirección',           placeholder: 'Calle, número, referencias',  type: 'text', required: true  },
+              { key: 'colonia' as const, label: 'Colonia',             placeholder: 'Ej: Centro',                  type: 'text', required: false },
             ]).map(({ key, label, placeholder, type, required }) => (
               <FormField
                 key={key}
@@ -216,6 +220,18 @@ export default function CheckoutPage() {
                 required={required}
               />
             ))}
+
+            <div>
+              <label className="block text-sm font-semibold text-stone-700 mb-1.5">
+                Ciudad
+              </label>
+              <input
+                type="text"
+                value="Manzanillo, Colima"
+                readOnly
+                className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-100 text-sm text-stone-500 cursor-not-allowed"
+              />
+            </div>
 
             <div>
               <label htmlFor="notes" className="block text-sm font-semibold text-stone-700 mb-1.5">
@@ -297,9 +313,9 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className="flex justify-between text-sm text-stone-500">
-                  <span>Envío</span>
+                  <span>Entrega local</span>
                   <span className={finalTotal >= 350 ? 'text-green-600 font-semibold' : 'text-stone-500'}>
-                    {finalTotal >= 350 ? '¡Gratis! 🎉' : 'A convenir'}
+                    {finalTotal >= 350 ? '¡Gratis! 🎉' : 'A coordinar'}
                   </span>
                 </div>
                 <div className="flex justify-between font-black text-xl pt-2 border-t border-stone-100">
@@ -327,7 +343,7 @@ export default function CheckoutPage() {
 
             <p className="text-xs text-stone-400 text-center px-2 leading-relaxed">
               Al hacer clic se abrirá WhatsApp con tu pedido listo.
-              Nosotros confirmaremos el envío.
+              Nosotros confirmaremos la entrega en Manzanillo.
             </p>
           </div>
         </div>

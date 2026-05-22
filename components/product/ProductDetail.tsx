@@ -87,7 +87,7 @@ export default function ProductDetail({ product, related }: ProductDetailProps) 
               <p className="text-stone-500 text-lg mt-2">{product.description}</p>
             </div>
 
-            <StarRating rating={product.rating} reviewCount={product.reviewCount} size="md" />
+            {product.rating != null && <StarRating rating={product.rating} reviewCount={product.reviewCount} size="md" />}
 
             {/* Price */}
             <div className="flex items-baseline gap-3">

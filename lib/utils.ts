@@ -30,6 +30,6 @@ export function getShippingProgress(total: number): number {
 
 export function getShippingMessage(total: number): string {
   const remaining = FREE_SHIPPING_THRESHOLD - total
-  if (total >= FREE_SHIPPING_THRESHOLD) return '🎉 ¡Tienes envío gratis!'
-  return `Te faltan ${formatPrice(remaining)} para envío gratis`
+  if (total >= FREE_SHIPPING_THRESHOLD) return '🎉 ¡Tienes entrega gratis!'
+  return `Te faltan ${formatPrice(remaining)} para entrega gratis`
 }

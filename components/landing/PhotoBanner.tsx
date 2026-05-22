@@ -33,7 +33,7 @@ export default function PhotoBanner() {
             Ver catálogo
           </Link>
           <a
-            href="https://wa.me/523122265985"
+            href="https://wa.me/523141222146"
             target="_blank"
             rel="noopener noreferrer"
             className="bg-[#25D366] hover:bg-[#20b858] text-white font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5 shadow-md text-sm"

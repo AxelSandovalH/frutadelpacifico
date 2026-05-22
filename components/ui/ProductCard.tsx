@@ -112,7 +112,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
           </p>
         </div>
 
-        <StarRating rating={product.rating} reviewCount={product.reviewCount} />
+        {product.rating != null && <StarRating rating={product.rating} reviewCount={product.reviewCount} />}
 
         <div className="flex items-center justify-between mt-auto pt-2 border-t border-stone-50">
           <div>

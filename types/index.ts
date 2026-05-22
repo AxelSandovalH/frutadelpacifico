@@ -23,8 +23,8 @@ export interface Product {
   image: string
   images: string[]
   inStock: boolean
-  rating: number
-  reviewCount: number
+  rating?: number
+  reviewCount?: number
   emoji: string
   pairsWith: string[]
 }

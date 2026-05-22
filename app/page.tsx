@@ -4,7 +4,6 @@ import BestSellers from '@/components/landing/BestSellers'
 import PhotoBanner from '@/components/landing/PhotoBanner'
 import CombosSection from '@/components/landing/CombosSection'
 import Benefits from '@/components/landing/Benefits'
-import Testimonials from '@/components/landing/Testimonials'
 import RecipesPreview from '@/components/landing/RecipesPreview'
 
 export default function HomePage() {
@@ -16,7 +15,6 @@ export default function HomePage() {
       <PhotoBanner />
       <CombosSection />
       <Benefits />
-      <Testimonials />
       <RecipesPreview />
     </>
   )

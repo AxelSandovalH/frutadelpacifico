@@ -55,7 +55,7 @@ export default function Header() {
 
           {/* WhatsApp — solo desktop */}
           <a
-            href="https://wa.me/523122265985"
+            href="https://wa.me/523141222146"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden md:flex items-center gap-1.5 bg-[#25D366] text-white text-xs font-bold px-3.5 py-2.5 rounded-xl hover:bg-[#1ebe5d] active:scale-95 transition-all duration-150"
@@ -118,7 +118,7 @@ export default function Header() {
             </Link>
           ))}
           <a
-            href="https://wa.me/523122265985"
+            href="https://wa.me/523141222146"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
