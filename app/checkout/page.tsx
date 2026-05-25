@@ -1,14 +1,23 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements } from '@stripe/react-stripe-js'
 import { useCart } from '@/store/useCart'
 import { formatPrice } from '@/lib/utils'
 import { generateOrderLink } from '@/lib/whatsapp'
 import { createOrder } from '@/lib/supabase'
+import { StripeForm } from '@/components/checkout/StripeForm'
 import Button from '@/components/ui/Button'
 import { CheckoutForm } from '@/types'
-import { ShoppingBag, ChevronLeft, Minus, Plus, Trash2, Check, AlertCircle, Loader2 } from 'lucide-react'
+import {
+  ShoppingBag, ChevronLeft, Minus, Plus, Trash2,
+  Check, AlertCircle, Loader2, MessageCircle, CreditCard, ShieldCheck,
+} from 'lucide-react'
+
+// Stripe se inicializa una sola vez fuera del componente
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
 const INITIAL_FORM: CheckoutForm = {
   name:    '',
@@ -19,41 +28,38 @@ const INITIAL_FORM: CheckoutForm = {
   notes:   '',
 }
 
-type TouchedFields = Partial<Record<keyof CheckoutForm, boolean>>
+type TouchedFields  = Partial<Record<keyof CheckoutForm, boolean>>
+type PaymentChannel = 'whatsapp' | 'stripe'
 
 function validateField(key: keyof CheckoutForm, value: string): string {
   switch (key) {
-    case 'name':
-      return value.trim().length < 2 ? 'Tu nombre es necesario' : ''
-    case 'phone':
-      return value.replace(/\D/g, '').length < 10 ? 'Ingresa un número de 10 dígitos' : ''
-    case 'address':
-      return value.trim().length < 5 ? 'La dirección es necesaria' : ''
-    case 'city':
-      return value.trim().length < 2 ? 'La ciudad es necesaria' : ''
-    default:
-      return ''
+    case 'name':    return value.trim().length < 2 ? 'Tu nombre es necesario' : ''
+    case 'phone':   return value.replace(/\D/g, '').length < 10 ? 'Ingresa un número de 10 dígitos' : ''
+    case 'address': return value.trim().length < 5 ? 'La dirección es necesaria' : ''
+    case 'city':    return value.trim().length < 2 ? 'La ciudad es necesaria' : ''
+    default:        return ''
   }
 }
 
 const REQUIRED_FIELDS: (keyof CheckoutForm)[] = ['name', 'phone', 'address', 'city']
 
+// ── FormField ──────────────────────────────────────────────────────────────────
 interface FieldProps {
-  fieldKey: keyof CheckoutForm
-  label:    string
+  fieldKey:    keyof CheckoutForm
+  label:       string
   placeholder: string
-  type?:    string
-  value:    string
-  error?:   string
-  touched:  boolean
-  onChange: (key: keyof CheckoutForm, value: string) => void
-  onBlur:   (key: keyof CheckoutForm) => void
-  required?: boolean
+  type?:       string
+  value:       string
+  error?:      string
+  touched:     boolean
+  onChange:    (key: keyof CheckoutForm, value: string) => void
+  onBlur:      (key: keyof CheckoutForm) => void
+  required?:   boolean
 }
 
 function FormField({ fieldKey, label, placeholder, type = 'text', value, error, touched, onChange, onBlur, required }: FieldProps) {
-  const isValid   = touched && !error && (required ? value.trim().length > 0 : true)
-  const hasError  = touched && !!error
+  const isValid  = touched && !error && (required ? value.trim().length > 0 : true)
+  const hasError = touched && !!error
 
   return (
     <div>
@@ -80,9 +86,8 @@ function FormField({ fieldKey, label, placeholder, type = 'text', value, error, 
           aria-describedby={hasError ? `${fieldKey}-error` : undefined}
           aria-invalid={hasError}
         />
-        {/* Icono de estado */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-          {isValid  && <Check    size={16} className="text-green-500" />}
+          {isValid  && <Check       size={16} className="text-green-500" />}
           {hasError && <AlertCircle size={16} className="text-red-400" />}
         </div>
       </div>
@@ -95,17 +100,24 @@ function FormField({ fieldKey, label, placeholder, type = 'text', value, error, 
   )
 }
 
+// ── Main Checkout Page ─────────────────────────────────────────────────────────
 export default function CheckoutPage() {
   const { items, getTotal, getSavings, updateQuantity, removeItem, clearCart } = useCart()
-  const [form,    setForm]    = useState<CheckoutForm>(INITIAL_FORM)
-  const [touched, setTouched] = useState<TouchedFields>({})
-  const [loading, setLoading] = useState(false)
+
+  const [form,          setForm]          = useState<CheckoutForm>(INITIAL_FORM)
+  const [touched,       setTouched]       = useState<TouchedFields>({})
+  const [loading,       setLoading]       = useState(false)
+  const [payChannel,    setPayChannel]    = useState<PaymentChannel>('whatsapp')
+  const [clientSecret,  setClientSecret]  = useState<string | null>(null)
+  const [stripeLoading, setStripeLoading] = useState(false)
+  const [stripeError,   setStripeError]   = useState('')
+  const [paid,          setPaid]          = useState(false)
 
   const total      = getTotal()
   const savings    = getSavings()
   const finalTotal = total - savings
 
-  // Calcula errores sobre el form actual
+  // Errors
   const errors: Partial<CheckoutForm> = {}
   for (const key of REQUIRED_FIELDS) {
     const msg = validateField(key, form[key] ?? '')
@@ -115,7 +127,6 @@ export default function CheckoutPage() {
 
   const handleChange = useCallback((key: keyof CheckoutForm, value: string) => {
     setForm((f) => ({ ...f, [key]: value }))
-    // Validar en tiempo real solo si ya fue tocado
     setTouched((t) => ({ ...t, [key]: true }))
   }, [])
 
@@ -123,12 +134,17 @@ export default function CheckoutPage() {
     setTouched((t) => ({ ...t, [key]: true }))
   }, [])
 
-  async function handleOrder() {
-    // Marcar todos los campos como tocados para mostrar errores
+  // Reset Stripe when switching channels
+  useEffect(() => {
+    setClientSecret(null)
+    setStripeError('')
+  }, [payChannel])
+
+  // ── WhatsApp order ───────────────────────────────────────────────────────────
+  async function handleWhatsAppOrder() {
     const allTouched: TouchedFields = {}
     for (const key of REQUIRED_FIELDS) allTouched[key] = true
     setTouched(allTouched)
-
     if (!isFormValid) return
 
     setLoading(true)
@@ -157,7 +173,54 @@ export default function CheckoutPage() {
     }
   }
 
-  if (items.length === 0) {
+  // ── Stripe: fetch PaymentIntent ──────────────────────────────────────────────
+  async function handleStripeSetup() {
+    const allTouched: TouchedFields = {}
+    for (const key of REQUIRED_FIELDS) allTouched[key] = true
+    setTouched(allTouched)
+    if (!isFormValid) return
+
+    setStripeLoading(true)
+    setStripeError('')
+    try {
+      const res  = await fetch('/api/checkout', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ amount: finalTotal, customerName: form.name }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setClientSecret(data.clientSecret)
+    } catch (err: unknown) {
+      setStripeError(err instanceof Error ? err.message : 'Error al preparar el pago')
+    } finally {
+      setStripeLoading(false)
+    }
+  }
+
+  // ── Stripe: payment success ──────────────────────────────────────────────────
+  async function handleStripeSuccess() {
+    await createOrder({
+      name:    form.name,
+      phone:   form.phone,
+      address: `${form.address}, ${form.colonia}`,
+      colonia: form.colonia,
+      city:    form.city,
+      notes:   form.notes,
+      total:   finalTotal,
+      items:   items.map((i) => ({
+        productId:   i.productId,
+        productName: i.product.name,
+        quantity:    i.quantity,
+        unitPrice:   i.product.price,
+      })),
+    }).catch(() => {})
+    clearCart()
+    setPaid(true)
+  }
+
+  // ── Empty cart ───────────────────────────────────────────────────────────────
+  if (items.length === 0 && !paid) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center gap-5 px-4 text-center">
         <div className="text-7xl">🛒</div>
@@ -168,6 +231,49 @@ export default function CheckoutPage() {
         </Link>
       </div>
     )
+  }
+
+  // ── Payment success ──────────────────────────────────────────────────────────
+  if (paid) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-4 text-center">
+        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center shadow-lg shadow-green-100">
+          <Check size={48} className="text-green-500" strokeWidth={3} />
+        </div>
+        <div>
+          <h2 className="text-3xl font-black text-stone-900">¡Pago recibido!</h2>
+          <p className="text-stone-500 mt-2 max-w-sm mx-auto">
+            Tu pedido está confirmado. Te contactaremos por WhatsApp para coordinar la entrega en Manzanillo.
+          </p>
+        </div>
+        <div className="bg-stone-50 rounded-2xl p-5 text-sm text-stone-600 max-w-xs w-full space-y-1">
+          <p><strong>Nombre:</strong> {form.name}</p>
+          <p><strong>Teléfono:</strong> {form.phone}</p>
+          <p><strong>Dirección:</strong> {form.address}{form.colonia ? `, ${form.colonia}` : ''}</p>
+          <p className="font-black text-orange-500 text-lg pt-1">Total: {formatPrice(finalTotal)}</p>
+        </div>
+        <Link href="/catalogo">
+          <Button variant="primary" size="lg">Seguir comprando</Button>
+        </Link>
+      </div>
+    )
+  }
+
+  // ── Stripe Elements appearance ───────────────────────────────────────────────
+  const elementsOptions = {
+    clientSecret: clientSecret ?? undefined,
+    appearance: {
+      theme:     'stripe' as const,
+      variables: {
+        colorPrimary:     '#ea580c',
+        colorBackground:  '#ffffff',
+        colorText:        '#1c1917',
+        colorDanger:      '#ef4444',
+        borderRadius:     '12px',
+        fontFamily:       'system-ui, sans-serif',
+        spacingUnit:      '4px',
+      },
+    },
   }
 
   return (
@@ -201,8 +307,8 @@ export default function CheckoutPage() {
             </div>
 
             {([
-              { key: 'name' as const,    label: 'Nombre completo',     placeholder: 'Ej: Ana García López',        type: 'text', required: true  },
-              { key: 'phone' as const,   label: 'WhatsApp / Teléfono', placeholder: 'Ej: 3141234567 (10 dígitos)', type: 'tel',  required: true  },
+              { key: 'name'    as const, label: 'Nombre completo',     placeholder: 'Ej: Ana García López',        type: 'text', required: true  },
+              { key: 'phone'   as const, label: 'WhatsApp / Teléfono', placeholder: 'Ej: 3141234567 (10 dígitos)', type: 'tel',  required: true  },
               { key: 'address' as const, label: 'Dirección',           placeholder: 'Calle, número, referencias',  type: 'text', required: true  },
               { key: 'colonia' as const, label: 'Colonia',             placeholder: 'Ej: Centro',                  type: 'text', required: false },
             ]).map(({ key, label, placeholder, type, required }) => (
@@ -222,9 +328,7 @@ export default function CheckoutPage() {
             ))}
 
             <div>
-              <label className="block text-sm font-semibold text-stone-700 mb-1.5">
-                Ciudad
-              </label>
+              <label className="block text-sm font-semibold text-stone-700 mb-1.5">Ciudad</label>
               <input
                 type="text"
                 value="Manzanillo, Colima"
@@ -248,8 +352,10 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* ── Resumen del pedido ── */}
+          {/* ── Resumen + Pago ── */}
           <div className="space-y-4 lg:sticky lg:top-24">
+
+            {/* Resumen del pedido */}
             <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-6">
               <h2 className="font-bold text-lg text-stone-900 mb-4 pb-3 border-b border-stone-100 flex items-center gap-2">
                 🛍️ Tu pedido
@@ -260,9 +366,7 @@ export default function CheckoutPage() {
                   <div key={item.productId} className="flex items-center gap-3">
                     <div className="text-3xl leading-none flex-shrink-0">{item.product.emoji}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-stone-900 leading-snug truncate">
-                        {item.product.shortName}
-                      </p>
+                      <p className="text-sm font-semibold text-stone-900 leading-snug truncate">{item.product.shortName}</p>
                       <p className="text-xs text-stone-400">{item.product.weight}</p>
                     </div>
                     <div className="flex items-center border border-stone-200 rounded-lg text-xs">
@@ -273,9 +377,7 @@ export default function CheckoutPage() {
                       >
                         <Minus size={11} />
                       </button>
-                      <span className="px-2.5 font-bold text-stone-900 min-w-[28px] text-center">
-                        {item.quantity}
-                      </span>
+                      <span className="px-2.5 font-bold text-stone-900 min-w-[28px] text-center">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                         className="px-2 py-1.5 hover:bg-stone-100 active:bg-stone-200 transition-colors"
@@ -285,9 +387,7 @@ export default function CheckoutPage() {
                       </button>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-bold text-stone-900">
-                        {formatPrice(item.product.price * item.quantity)}
-                      </p>
+                      <p className="text-sm font-bold text-stone-900">{formatPrice(item.product.price * item.quantity)}</p>
                       <button
                         onClick={() => removeItem(item.productId)}
                         className="text-stone-300 hover:text-red-400 active:text-red-600 mt-0.5 transition-colors"
@@ -325,26 +425,109 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Botón de envío */}
-            <Button
-              variant="whatsapp"
-              fullWidth
-              size="xl"
-              onClick={handleOrder}
-              disabled={loading}
-              className="shadow-lg shadow-green-500/25"
-            >
-              {loading ? (
-                <><Loader2 size={18} className="animate-spin" /> Preparando pedido...</>
-              ) : (
-                <>💬 Enviar pedido por WhatsApp</>
-              )}
-            </Button>
+            {/* ── Método de pago ── */}
+            <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-6 space-y-4">
+              <h2 className="font-bold text-base text-stone-900 flex items-center gap-2">
+                💳 Método de pago
+              </h2>
 
-            <p className="text-xs text-stone-400 text-center px-2 leading-relaxed">
-              Al hacer clic se abrirá WhatsApp con tu pedido listo.
-              Nosotros confirmaremos la entrega en Manzanillo.
-            </p>
+              {/* Toggle WhatsApp / Tarjeta */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setPayChannel('whatsapp')}
+                  className={[
+                    'flex flex-col items-center gap-2 py-3.5 rounded-xl border-2 transition-all text-sm font-bold',
+                    payChannel === 'whatsapp'
+                      ? 'border-[#25D366] bg-green-50 text-green-700'
+                      : 'border-stone-200 text-stone-500 hover:border-stone-300',
+                  ].join(' ')}
+                >
+                  <MessageCircle size={20} className={payChannel === 'whatsapp' ? 'text-[#25D366]' : 'text-stone-400'} />
+                  WhatsApp
+                </button>
+                <button
+                  onClick={() => setPayChannel('stripe')}
+                  className={[
+                    'flex flex-col items-center gap-2 py-3.5 rounded-xl border-2 transition-all text-sm font-bold',
+                    payChannel === 'stripe'
+                      ? 'border-orange-400 bg-orange-50 text-orange-600'
+                      : 'border-stone-200 text-stone-500 hover:border-stone-300',
+                  ].join(' ')}
+                >
+                  <CreditCard size={20} className={payChannel === 'stripe' ? 'text-orange-500' : 'text-stone-400'} />
+                  Tarjeta
+                </button>
+              </div>
+
+              {/* WhatsApp flow */}
+              {payChannel === 'whatsapp' && (
+                <div className="space-y-3">
+                  <p className="text-xs text-stone-500 leading-relaxed">
+                    Se abrirá WhatsApp con tu pedido. Nosotros confirmamos la entrega y el pago al momento de la misma.
+                  </p>
+                  <Button
+                    variant="whatsapp"
+                    fullWidth
+                    size="xl"
+                    onClick={handleWhatsAppOrder}
+                    disabled={loading}
+                    className="shadow-lg shadow-green-500/25"
+                  >
+                    {loading
+                      ? <><Loader2 size={18} className="animate-spin" /> Preparando…</>
+                      : <>💬 Enviar pedido por WhatsApp</>
+                    }
+                  </Button>
+                </div>
+              )}
+
+              {/* Stripe flow */}
+              {payChannel === 'stripe' && (
+                <div className="space-y-4">
+                  {!clientSecret ? (
+                    <div className="space-y-3">
+                      <p className="text-xs text-stone-500 leading-relaxed">
+                        Paga ahora con tu tarjeta de forma segura. Tu pedido queda confirmado al instante.
+                      </p>
+                      {stripeError && (
+                        <p className="text-red-500 text-xs bg-red-50 rounded-xl px-4 py-2.5">
+                          ⚠️ {stripeError}
+                        </p>
+                      )}
+                      <button
+                        onClick={handleStripeSetup}
+                        disabled={stripeLoading}
+                        className={[
+                          'w-full py-4 rounded-xl font-black text-base transition-all',
+                          stripeLoading
+                            ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                            : 'bg-orange-500 text-white hover:bg-orange-600 active:scale-[0.98] shadow-lg shadow-orange-200',
+                        ].join(' ')}
+                      >
+                        {stripeLoading
+                          ? <span className="flex items-center justify-center gap-2"><Loader2 size={18} className="animate-spin" /> Preparando pago…</span>
+                          : <>💳 Pagar con tarjeta — {formatPrice(finalTotal)}</>
+                        }
+                      </button>
+                    </div>
+                  ) : (
+                    <Elements stripe={stripePromise} options={elementsOptions}>
+                      <StripeForm
+                        total={finalTotal}
+                        onSuccess={handleStripeSuccess}
+                        onError={(msg) => setStripeError(msg)}
+                      />
+                    </Elements>
+                  )}
+
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-stone-400">
+                    <ShieldCheck size={13} className="text-green-500" />
+                    Cifrado SSL — Powered by Stripe
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
       </div>
