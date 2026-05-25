@@ -14,8 +14,8 @@ import { COMMISSION_RATE } from '@/lib/utils'
 
 // ⚠️  Cambia estos PINs antes de lanzar en producción
 const POS_USERS: (POSUser & { pin: string })[] = [
-  { id: 'owner', name: 'Axel',          role: 'owner'         as UserRole, pin: '1234' },
-  { id: 'colab', name: 'Colaboradora',  role: 'collaborator'  as UserRole, pin: '5678' },
+  { id: 'owner', name: 'Axel',          role: 'owner'         as UserRole, pin: '9170' },
+  { id: 'colab', name: 'Colaboradora',  role: 'collaborator'  as UserRole, pin: '1177' },
 ]
 
 interface POSState {
