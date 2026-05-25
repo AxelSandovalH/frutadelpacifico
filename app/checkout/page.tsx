@@ -1,22 +1,20 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 import { useCart } from '@/store/useCart'
 import { formatPrice } from '@/lib/utils'
-import { generateOrderLink } from '@/lib/whatsapp'
 import { createOrder } from '@/lib/supabase'
 import { StripeForm } from '@/components/checkout/StripeForm'
 import Button from '@/components/ui/Button'
 import { CheckoutForm } from '@/types'
 import {
   ShoppingBag, ChevronLeft, Minus, Plus, Trash2,
-  Check, AlertCircle, Loader2, MessageCircle, CreditCard, ShieldCheck,
+  Check, AlertCircle, Loader2, ShieldCheck,
 } from 'lucide-react'
 
-// Stripe se inicializa una sola vez fuera del componente
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
 const INITIAL_FORM: CheckoutForm = {
@@ -28,8 +26,7 @@ const INITIAL_FORM: CheckoutForm = {
   notes:   '',
 }
 
-type TouchedFields  = Partial<Record<keyof CheckoutForm, boolean>>
-type PaymentChannel = 'whatsapp' | 'stripe'
+type TouchedFields = Partial<Record<keyof CheckoutForm, boolean>>
 
 function validateField(key: keyof CheckoutForm, value: string): string {
   switch (key) {
@@ -43,7 +40,6 @@ function validateField(key: keyof CheckoutForm, value: string): string {
 
 const REQUIRED_FIELDS: (keyof CheckoutForm)[] = ['name', 'phone', 'address', 'city']
 
-// ── FormField ──────────────────────────────────────────────────────────────────
 interface FieldProps {
   fieldKey:    keyof CheckoutForm
   label:       string
@@ -100,14 +96,11 @@ function FormField({ fieldKey, label, placeholder, type = 'text', value, error, 
   )
 }
 
-// ── Main Checkout Page ─────────────────────────────────────────────────────────
 export default function CheckoutPage() {
   const { items, getTotal, getSavings, updateQuantity, removeItem, clearCart } = useCart()
 
   const [form,          setForm]          = useState<CheckoutForm>(INITIAL_FORM)
   const [touched,       setTouched]       = useState<TouchedFields>({})
-  const [loading,       setLoading]       = useState(false)
-  const [payChannel,    setPayChannel]    = useState<PaymentChannel>('whatsapp')
   const [clientSecret,  setClientSecret]  = useState<string | null>(null)
   const [stripeLoading, setStripeLoading] = useState(false)
   const [stripeError,   setStripeError]   = useState('')
@@ -117,7 +110,6 @@ export default function CheckoutPage() {
   const savings    = getSavings()
   const finalTotal = total - savings
 
-  // Errors
   const errors: Partial<CheckoutForm> = {}
   for (const key of REQUIRED_FIELDS) {
     const msg = validateField(key, form[key] ?? '')
@@ -134,47 +126,8 @@ export default function CheckoutPage() {
     setTouched((t) => ({ ...t, [key]: true }))
   }, [])
 
-  // Reset Stripe when switching channels
-  useEffect(() => {
-    setClientSecret(null)
-    setStripeError('')
-  }, [payChannel])
-
-  // ── WhatsApp order ───────────────────────────────────────────────────────────
-  async function handleWhatsAppOrder() {
-    const allTouched: TouchedFields = {}
-    for (const key of REQUIRED_FIELDS) allTouched[key] = true
-    setTouched(allTouched)
-    if (!isFormValid) return
-
-    setLoading(true)
-    try {
-      await createOrder({
-        name:    form.name,
-        phone:   form.phone,
-        address: `${form.address}, ${form.colonia}`,
-        colonia: form.colonia,
-        city:    form.city,
-        notes:   form.notes,
-        total:   finalTotal,
-        items:   items.map((i) => ({
-          productId:   i.productId,
-          productName: i.product.name,
-          quantity:    i.quantity,
-          unitPrice:   i.product.price,
-        })),
-      }).catch(() => {})
-
-      const url = generateOrderLink(items, form, finalTotal)
-      window.open(url, '_blank')
-      clearCart()
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // ── Stripe: fetch PaymentIntent ──────────────────────────────────────────────
-  async function handleStripeSetup() {
+  // Valida el form y crea el PaymentIntent
+  async function handleProceed() {
     const allTouched: TouchedFields = {}
     for (const key of REQUIRED_FIELDS) allTouched[key] = true
     setTouched(allTouched)
@@ -198,7 +151,7 @@ export default function CheckoutPage() {
     }
   }
 
-  // ── Stripe: payment success ──────────────────────────────────────────────────
+  // Tras pago exitoso: guarda orden y limpia carrito
   async function handleStripeSuccess() {
     await createOrder({
       name:    form.name,
@@ -219,7 +172,7 @@ export default function CheckoutPage() {
     setPaid(true)
   }
 
-  // ── Empty cart ───────────────────────────────────────────────────────────────
+  // ── Carrito vacío ────────────────────────────────────────────────────────────
   if (items.length === 0 && !paid) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center gap-5 px-4 text-center">
@@ -233,7 +186,7 @@ export default function CheckoutPage() {
     )
   }
 
-  // ── Payment success ──────────────────────────────────────────────────────────
+  // ── Pago exitoso ─────────────────────────────────────────────────────────────
   if (paid) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-4 text-center">
@@ -246,11 +199,13 @@ export default function CheckoutPage() {
             Tu pedido está confirmado. Te contactaremos por WhatsApp para coordinar la entrega en Manzanillo.
           </p>
         </div>
-        <div className="bg-stone-50 rounded-2xl p-5 text-sm text-stone-600 max-w-xs w-full space-y-1">
+        <div className="bg-stone-50 rounded-2xl p-5 text-sm text-stone-600 max-w-xs w-full space-y-1 text-left">
           <p><strong>Nombre:</strong> {form.name}</p>
           <p><strong>Teléfono:</strong> {form.phone}</p>
           <p><strong>Dirección:</strong> {form.address}{form.colonia ? `, ${form.colonia}` : ''}</p>
-          <p className="font-black text-orange-500 text-lg pt-1">Total: {formatPrice(finalTotal)}</p>
+          <p className="font-black text-orange-500 text-lg pt-2 border-t border-stone-200 mt-2">
+            Total pagado: {formatPrice(finalTotal)}
+          </p>
         </div>
         <Link href="/catalogo">
           <Button variant="primary" size="lg">Seguir comprando</Button>
@@ -259,19 +214,17 @@ export default function CheckoutPage() {
     )
   }
 
-  // ── Stripe Elements appearance ───────────────────────────────────────────────
   const elementsOptions = {
     clientSecret: clientSecret ?? undefined,
     appearance: {
       theme:     'stripe' as const,
       variables: {
-        colorPrimary:     '#ea580c',
-        colorBackground:  '#ffffff',
-        colorText:        '#1c1917',
-        colorDanger:      '#ef4444',
-        borderRadius:     '12px',
-        fontFamily:       'system-ui, sans-serif',
-        spacingUnit:      '4px',
+        colorPrimary:    '#ea580c',
+        colorBackground: '#ffffff',
+        colorText:       '#1c1917',
+        colorDanger:     '#ef4444',
+        borderRadius:    '12px',
+        fontFamily:      'system-ui, sans-serif',
       },
     },
   }
@@ -280,7 +233,6 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-stone-50 py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
 
-        {/* Breadcrumb */}
         <Link
           href="/catalogo"
           className="inline-flex items-center gap-1 text-sm text-stone-400 hover:text-orange-500 mb-6 transition-colors"
@@ -295,9 +247,9 @@ export default function CheckoutPage() {
 
         <div className="grid lg:grid-cols-[1fr_400px] gap-8 items-start">
 
-          {/* ── Formulario ── */}
+          {/* ── Formulario de entrega ── */}
           <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-6 sm:p-8 space-y-5">
-            <h2 className="font-bold text-lg text-stone-900 pb-3 border-b border-stone-100 flex items-center gap-2">
+            <h2 className="font-bold text-lg text-stone-900 pb-3 border-b border-stone-100">
               📍 Datos de entrega
             </h2>
 
@@ -357,7 +309,7 @@ export default function CheckoutPage() {
 
             {/* Resumen del pedido */}
             <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-6">
-              <h2 className="font-bold text-lg text-stone-900 mb-4 pb-3 border-b border-stone-100 flex items-center gap-2">
+              <h2 className="font-bold text-lg text-stone-900 mb-4 pb-3 border-b border-stone-100">
                 🛍️ Tu pedido
               </h2>
 
@@ -370,29 +322,17 @@ export default function CheckoutPage() {
                       <p className="text-xs text-stone-400">{item.product.weight}</p>
                     </div>
                     <div className="flex items-center border border-stone-200 rounded-lg text-xs">
-                      <button
-                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                        className="px-2 py-1.5 hover:bg-stone-100 active:bg-stone-200 transition-colors"
-                        aria-label="Reducir cantidad"
-                      >
+                      <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="px-2 py-1.5 hover:bg-stone-100 transition-colors" aria-label="Reducir">
                         <Minus size={11} />
                       </button>
                       <span className="px-2.5 font-bold text-stone-900 min-w-[28px] text-center">{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                        className="px-2 py-1.5 hover:bg-stone-100 active:bg-stone-200 transition-colors"
-                        aria-label="Aumentar cantidad"
-                      >
+                      <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="px-2 py-1.5 hover:bg-stone-100 transition-colors" aria-label="Aumentar">
                         <Plus size={11} />
                       </button>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-sm font-bold text-stone-900">{formatPrice(item.product.price * item.quantity)}</p>
-                      <button
-                        onClick={() => removeItem(item.productId)}
-                        className="text-stone-300 hover:text-red-400 active:text-red-600 mt-0.5 transition-colors"
-                        aria-label={`Eliminar ${item.product.shortName}`}
-                      >
+                      <button onClick={() => removeItem(item.productId)} className="text-stone-300 hover:text-red-400 mt-0.5 transition-colors" aria-label={`Eliminar ${item.product.shortName}`}>
                         <Trash2 size={13} />
                       </button>
                     </div>
@@ -400,21 +340,18 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              {/* Totales */}
               <div className="mt-5 pt-4 border-t border-stone-100 space-y-2.5">
                 <div className="flex justify-between text-sm text-stone-500">
-                  <span>Subtotal</span>
-                  <span>{formatPrice(total)}</span>
+                  <span>Subtotal</span><span>{formatPrice(total)}</span>
                 </div>
                 {savings > 0 && (
                   <div className="flex justify-between text-sm bg-green-50 text-green-700 font-semibold rounded-lg px-3 py-2">
-                    <span>🎉 Descuento 3x2</span>
-                    <span>-{formatPrice(savings)}</span>
+                    <span>🎉 Descuento 3x2</span><span>-{formatPrice(savings)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm text-stone-500">
                   <span>Entrega local</span>
-                  <span className={finalTotal >= 350 ? 'text-green-600 font-semibold' : 'text-stone-500'}>
+                  <span className={finalTotal >= 350 ? 'text-green-600 font-semibold' : ''}>
                     {finalTotal >= 350 ? '¡Gratis! 🎉' : 'A coordinar'}
                   </span>
                 </div>
@@ -425,107 +362,45 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* ── Método de pago ── */}
+            {/* ── Pago con Stripe ── */}
             <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-6 space-y-4">
-              <h2 className="font-bold text-base text-stone-900 flex items-center gap-2">
-                💳 Método de pago
-              </h2>
+              <h2 className="font-bold text-base text-stone-900">💳 Pago seguro</h2>
 
-              {/* Toggle WhatsApp / Tarjeta */}
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setPayChannel('whatsapp')}
-                  className={[
-                    'flex flex-col items-center gap-2 py-3.5 rounded-xl border-2 transition-all text-sm font-bold',
-                    payChannel === 'whatsapp'
-                      ? 'border-[#25D366] bg-green-50 text-green-700'
-                      : 'border-stone-200 text-stone-500 hover:border-stone-300',
-                  ].join(' ')}
-                >
-                  <MessageCircle size={20} className={payChannel === 'whatsapp' ? 'text-[#25D366]' : 'text-stone-400'} />
-                  WhatsApp
-                </button>
-                <button
-                  onClick={() => setPayChannel('stripe')}
-                  className={[
-                    'flex flex-col items-center gap-2 py-3.5 rounded-xl border-2 transition-all text-sm font-bold',
-                    payChannel === 'stripe'
-                      ? 'border-orange-400 bg-orange-50 text-orange-600'
-                      : 'border-stone-200 text-stone-500 hover:border-stone-300',
-                  ].join(' ')}
-                >
-                  <CreditCard size={20} className={payChannel === 'stripe' ? 'text-orange-500' : 'text-stone-400'} />
-                  Tarjeta
-                </button>
-              </div>
-
-              {/* WhatsApp flow */}
-              {payChannel === 'whatsapp' && (
+              {!clientSecret ? (
                 <div className="space-y-3">
-                  <p className="text-xs text-stone-500 leading-relaxed">
-                    Se abrirá WhatsApp con tu pedido. Nosotros confirmamos la entrega y el pago al momento de la misma.
-                  </p>
-                  <Button
-                    variant="whatsapp"
-                    fullWidth
-                    size="xl"
-                    onClick={handleWhatsAppOrder}
-                    disabled={loading}
-                    className="shadow-lg shadow-green-500/25"
-                  >
-                    {loading
-                      ? <><Loader2 size={18} className="animate-spin" /> Preparando…</>
-                      : <>💬 Enviar pedido por WhatsApp</>
-                    }
-                  </Button>
-                </div>
-              )}
-
-              {/* Stripe flow */}
-              {payChannel === 'stripe' && (
-                <div className="space-y-4">
-                  {!clientSecret ? (
-                    <div className="space-y-3">
-                      <p className="text-xs text-stone-500 leading-relaxed">
-                        Paga ahora con tu tarjeta de forma segura. Tu pedido queda confirmado al instante.
-                      </p>
-                      {stripeError && (
-                        <p className="text-red-500 text-xs bg-red-50 rounded-xl px-4 py-2.5">
-                          ⚠️ {stripeError}
-                        </p>
-                      )}
-                      <button
-                        onClick={handleStripeSetup}
-                        disabled={stripeLoading}
-                        className={[
-                          'w-full py-4 rounded-xl font-black text-base transition-all',
-                          stripeLoading
-                            ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
-                            : 'bg-orange-500 text-white hover:bg-orange-600 active:scale-[0.98] shadow-lg shadow-orange-200',
-                        ].join(' ')}
-                      >
-                        {stripeLoading
-                          ? <span className="flex items-center justify-center gap-2"><Loader2 size={18} className="animate-spin" /> Preparando pago…</span>
-                          : <>💳 Pagar con tarjeta — {formatPrice(finalTotal)}</>
-                        }
-                      </button>
-                    </div>
-                  ) : (
-                    <Elements stripe={stripePromise} options={elementsOptions}>
-                      <StripeForm
-                        total={finalTotal}
-                        onSuccess={handleStripeSuccess}
-                        onError={(msg) => setStripeError(msg)}
-                      />
-                    </Elements>
+                  {stripeError && (
+                    <p className="text-red-500 text-xs bg-red-50 rounded-xl px-4 py-2.5">⚠️ {stripeError}</p>
                   )}
-
-                  <div className="flex items-center justify-center gap-1.5 text-xs text-stone-400">
-                    <ShieldCheck size={13} className="text-green-500" />
-                    Cifrado SSL — Powered by Stripe
-                  </div>
+                  <button
+                    onClick={handleProceed}
+                    disabled={stripeLoading}
+                    className={[
+                      'w-full py-4 rounded-xl font-black text-base transition-all',
+                      stripeLoading
+                        ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                        : 'bg-orange-500 text-white hover:bg-orange-600 active:scale-[0.98] shadow-lg shadow-orange-200',
+                    ].join(' ')}
+                  >
+                    {stripeLoading
+                      ? <span className="flex items-center justify-center gap-2"><Loader2 size={18} className="animate-spin" />Preparando pago…</span>
+                      : `💳 Pagar ${formatPrice(finalTotal)}`
+                    }
+                  </button>
                 </div>
+              ) : (
+                <Elements stripe={stripePromise} options={elementsOptions}>
+                  <StripeForm
+                    total={finalTotal}
+                    onSuccess={handleStripeSuccess}
+                    onError={(msg) => setStripeError(msg)}
+                  />
+                </Elements>
               )}
+
+              <p className="flex items-center justify-center gap-1.5 text-xs text-stone-400">
+                <ShieldCheck size={13} className="text-green-500" />
+                Cifrado SSL · Powered by Stripe
+              </p>
             </div>
 
           </div>
