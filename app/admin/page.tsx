@@ -352,7 +352,7 @@ export default function AdminPage() {
     if (currentUser?.role === 'owner') {
       setAuthed(true)
       setAccessErr(false)
-    } else if (currentUser && currentUser.role !== 'owner') {
+    } else if (currentUser) {
       // Collaborator tried to access admin
       setAccessErr(true)
       logout()
