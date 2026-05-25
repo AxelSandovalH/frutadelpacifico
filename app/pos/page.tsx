@@ -271,60 +271,163 @@ function PaymentView({
   onConfirm: (method: PaymentMethod) => void
   onBack:    () => void
 }) {
-  const [method, setMethod] = useState<PaymentMethod>('efectivo')
+  const [method,    setMethod]    = useState<PaymentMethod>('efectivo')
+  const [billete,   setBillete]   = useState<string>('')
 
-  const options: { value: PaymentMethod; label: string; icon: typeof Banknote; desc: string }[] = [
-    { value: 'efectivo',      label: 'Efectivo',      icon: Banknote,    desc: 'Pago en efectivo' },
-    { value: 'transferencia', label: 'Transferencia',  icon: Smartphone,  desc: 'CoDi · SPEI · Depósito' },
-  ]
+  const BILLS = [20, 50, 100, 200, 500, 1000]
+
+  const billetNum = parseFloat(billete) || 0
+  const cambio    = billetNum - total
+  const canConfirm = method === 'transferencia' || billetNum >= total
+
+  function selectBill(b: number) {
+    setBillete(b.toString())
+  }
+
+  function handleCustomInput(val: string) {
+    // Solo números
+    const clean = val.replace(/[^0-9]/g, '')
+    setBillete(clean)
+  }
+
+  // Reset billete when switching methods
+  function handleMethodChange(m: PaymentMethod) {
+    setMethod(m)
+    setBillete('')
+  }
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden bg-white">
+      {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
         <button onClick={onBack} className="p-2 rounded-full hover:bg-stone-100 transition-colors">
           <X size={20} className="text-stone-500" />
         </button>
-        <h2 className="font-black text-xl text-stone-900">Método de pago</h2>
+        <h2 className="font-black text-xl text-stone-900">Cobrar</h2>
         <div className="w-9" />
       </div>
 
-      <div className="flex-1 flex flex-col gap-6 px-6 py-8">
-        <p className="text-center text-4xl font-black text-orange-500">{formatPrice(total)}</p>
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
 
-        <div className="space-y-3">
-          {options.map(({ value, label, icon: Icon, desc }) => (
+        {/* Total */}
+        <div className="text-center">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Total a cobrar</p>
+          <p className="text-5xl font-black text-orange-500">{formatPrice(total)}</p>
+        </div>
+
+        {/* Método */}
+        <div className="grid grid-cols-2 gap-3">
+          {([
+            { value: 'efectivo'      as const, label: 'Efectivo',      icon: Banknote   },
+            { value: 'transferencia' as const, label: 'Transferencia', icon: Smartphone },
+          ]).map(({ value, label, icon: Icon }) => (
             <button
               key={value}
-              onClick={() => setMethod(value)}
+              onClick={() => handleMethodChange(value)}
               className={[
-                'w-full flex items-center gap-4 px-5 py-4 rounded-2xl border-2 transition-all active:scale-[0.98]',
+                'flex flex-col items-center gap-2 py-4 rounded-2xl border-2 transition-all active:scale-[0.97]',
                 method === value
-                  ? 'border-orange-400 bg-orange-50 shadow-sm'
+                  ? 'border-orange-400 bg-orange-50'
                   : 'border-stone-200 bg-white hover:border-orange-200',
               ].join(' ')}
             >
               <div className={[
-                'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors',
+                'w-10 h-10 rounded-xl flex items-center justify-center transition-colors',
                 method === value ? 'bg-orange-500 text-white' : 'bg-stone-100 text-stone-400',
               ].join(' ')}>
-                <Icon size={22} />
+                <Icon size={20} />
               </div>
-              <div className="text-left flex-1">
-                <p className="font-bold text-stone-900">{label}</p>
-                <p className="text-xs text-stone-400 mt-0.5">{desc}</p>
-              </div>
-              {method === value && <Check size={20} className="text-orange-500 flex-shrink-0" />}
+              <span className={`text-sm font-bold ${method === value ? 'text-orange-600' : 'text-stone-600'}`}>
+                {label}
+              </span>
             </button>
           ))}
         </div>
+
+        {/* Calculadora de cambio — solo efectivo */}
+        {method === 'efectivo' && (
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">¿Con cuánto paga?</p>
+
+            {/* Billetes rápidos */}
+            <div className="grid grid-cols-3 gap-2">
+              {BILLS.map((b) => (
+                <button
+                  key={b}
+                  onClick={() => selectBill(b)}
+                  className={[
+                    'py-3 rounded-xl text-sm font-black border-2 transition-all active:scale-95',
+                    billete === b.toString()
+                      ? 'border-stone-900 bg-stone-900 text-white'
+                      : b >= total
+                        ? 'border-stone-200 bg-white text-stone-900 hover:border-stone-400'
+                        : 'border-stone-100 bg-stone-50 text-stone-300 cursor-default',
+                  ].join(' ')}
+                  disabled={b < total}
+                >
+                  ${b}
+                </button>
+              ))}
+            </div>
+
+            {/* Input manual */}
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold">$</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                placeholder="Otra cantidad..."
+                value={billete}
+                onChange={(e) => handleCustomInput(e.target.value)}
+                className="w-full pl-8 pr-4 py-3.5 rounded-xl border-2 border-stone-200 text-sm font-bold focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+              />
+            </div>
+
+            {/* Cambio */}
+            {billetNum > 0 && (
+              <div className={[
+                'rounded-2xl px-5 py-4 text-center transition-all',
+                cambio >= 0 ? 'bg-green-50 border-2 border-green-200' : 'bg-red-50 border-2 border-red-200',
+              ].join(' ')}>
+                {cambio >= 0 ? (
+                  <>
+                    <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">Cambio</p>
+                    <p className="text-4xl font-black text-green-600 mt-1">{formatPrice(cambio)}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-semibold text-red-500 uppercase tracking-wide">Falta</p>
+                    <p className="text-3xl font-black text-red-500 mt-1">{formatPrice(Math.abs(cambio))}</p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Transferencia — instrucción */}
+        {method === 'transferencia' && (
+          <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl px-5 py-4 text-center">
+            <p className="text-2xl mb-1">📱</p>
+            <p className="text-sm font-bold text-blue-700">Confirma el pago antes de dar el producto</p>
+            <p className="text-xs text-blue-500 mt-0.5">CoDi · SPEI · Depósito</p>
+          </div>
+        )}
       </div>
 
-      <div className="flex-shrink-0 px-6 pb-8">
+      {/* Botón confirmar */}
+      <div className="flex-shrink-0 px-5 pb-6 pt-3 border-t border-stone-100">
         <button
           onClick={() => onConfirm(method)}
-          className="w-full bg-stone-900 text-white font-black text-lg py-4 rounded-2xl active:bg-stone-800 transition-colors shadow-lg"
+          disabled={!canConfirm}
+          className={[
+            'w-full font-black text-lg py-4 rounded-2xl transition-colors shadow-lg',
+            canConfirm
+              ? 'bg-stone-900 text-white active:bg-stone-800'
+              : 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none',
+          ].join(' ')}
         >
-          ✓ Confirmar cobro
+          {canConfirm ? '✓ Confirmar cobro' : 'Ingresa el billete'}
         </button>
       </div>
     </div>
