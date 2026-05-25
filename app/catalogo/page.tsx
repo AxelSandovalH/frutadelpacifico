@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { products, categories } from '@/lib/data'
+import { getProductSettings } from '@/lib/supabase'
 import ProductCard from '@/components/ui/ProductCard'
 import { Search } from 'lucide-react'
+import type { Product } from '@/types'
 
 type FilterTag = 'todos' | 'dulce' | 'enchilado' | 'popular' | 'nuevo' | 'recomendado'
 type CategorySlug = 'todos' | 'citricos' | 'tropicales' | 'mix-enchilado'
@@ -12,17 +14,38 @@ export default function CatalogoPage() {
   const [search, setSearch] = useState('')
   const [activeTag, setActiveTag] = useState<FilterTag>('todos')
   const [activeCategory, setActiveCategory] = useState<CategorySlug>('todos')
+  const [overrides, setOverrides] = useState<Record<string, Partial<Product>>>({})
+
+  useEffect(() => {
+    getProductSettings().then((data) => {
+      const mapped: Record<string, Partial<Product>> = {}
+      for (const [id, ov] of Object.entries(data)) {
+        mapped[id] = {
+          ...(ov.price       != null && { price:       ov.price }),
+          ...(ov.inStock     != null && { inStock:     ov.inStock }),
+          ...(ov.imageUrl    != null && { image:       ov.imageUrl }),
+          ...(ov.description != null && { description: ov.description }),
+        }
+      }
+      setOverrides(mapped)
+    })
+  }, [])
+
+  const mergedProducts = useMemo(
+    () => products.map((p) => overrides[p.id] ? { ...p, ...overrides[p.id] } : p),
+    [overrides]
+  )
 
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    return mergedProducts.filter((p) => {
       const matchSearch =
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.description.toLowerCase().includes(search.toLowerCase())
       const matchTag = activeTag === 'todos' || p.tags.includes(activeTag as never)
       const matchCat = activeCategory === 'todos' || p.categorySlug === activeCategory
-      return matchSearch && matchTag && matchCat
+      return matchSearch && matchTag && matchCat && p.inStock !== false
     })
-  }, [search, activeTag, activeCategory])
+  }, [mergedProducts, search, activeTag, activeCategory])
 
   const tagFilters: { value: FilterTag; label: string }[] = [
     { value: 'todos', label: 'Todos' },

@@ -228,6 +228,74 @@ export async function savePOSSale(sale: POSSaleRecord) {
   return { success: true }
 }
 
+// ── CMS: product overrides ────────────────────────────────────────────────────
+/*  SQL — ejecutar en Supabase SQL Editor:
+
+create table product_settings (
+  product_id  text primary key,
+  price       numeric(10,2),
+  in_stock    boolean,
+  image_url   text,
+  description text,
+  updated_at  timestamptz default now()
+);
+alter table product_settings enable row level security;
+create policy "public read" on product_settings for select using (true);
+create policy "allow all"   on product_settings for all    using (true) with check (true);
+*/
+
+export type ProductOverride = {
+  price?:       number
+  inStock?:     boolean
+  imageUrl?:    string
+  description?: string
+}
+
+export async function getProductSettings(): Promise<Record<string, ProductOverride>> {
+  if (!supabase) return {}
+  const { data, error } = await supabase.from('product_settings').select('*')
+  if (error || !data) return {}
+  return Object.fromEntries(
+    data.map((s: any) => [
+      s.product_id,
+      {
+        ...(s.price       != null && { price:       s.price }),
+        ...(s.in_stock    != null && { inStock:     s.in_stock }),
+        ...(s.image_url   != null && { imageUrl:    s.image_url }),
+        ...(s.description != null && { description: s.description }),
+      },
+    ])
+  )
+}
+
+export async function saveProductSetting(productId: string, updates: ProductOverride) {
+  if (!supabase) return { success: false }
+  const { error } = await supabase.from('product_settings').upsert(
+    {
+      product_id:  productId,
+      price:       updates.price,
+      in_stock:    updates.inStock,
+      image_url:   updates.imageUrl,
+      description: updates.description,
+      updated_at:  new Date().toISOString(),
+    },
+    { onConflict: 'product_id' }
+  )
+  return { success: !error, error }
+}
+
+export async function uploadProductImage(productId: string, file: File): Promise<string | null> {
+  if (!supabase) return null
+  const ext      = file.name.split('.').pop() ?? 'jpg'
+  const filename = `${productId}-custom.${ext}`
+  const { error } = await supabase.storage
+    .from('productos')
+    .upload(filename, file, { upsert: true, contentType: file.type })
+  if (error) return null
+  const { data } = supabase.storage.from('productos').getPublicUrl(filename)
+  return data.publicUrl
+}
+
 export async function getPOSSales(): Promise<POSSaleRecord[]> {
   if (!supabase) return []
 

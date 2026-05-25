@@ -3,13 +3,14 @@
 import { useState, useEffect, useMemo } from 'react'
 import { usePOS }    from '@/store/usePOS'
 import { formatPrice } from '@/lib/utils'
+import { ProductCMS } from '@/components/admin/ProductCMS'
 import type { POSSaleRecord, PaymentMethod } from '@/types'
 import {
   LogOut, TrendingUp, ShoppingBag, Users,
-  Clock, Banknote, Smartphone, ArrowLeft,
+  Clock, Banknote, Smartphone, ArrowLeft, Package,
 } from 'lucide-react'
 
-type Tab = 'hoy' | 'ventas' | 'comisiones'
+type Tab = 'hoy' | 'ventas' | 'comisiones' | 'productos'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function sameDay(dateStr: string, ref: Date): boolean {
@@ -368,9 +369,10 @@ export default function AdminPage() {
   if (!mounted) return null
 
   const tabs: { key: Tab; label: string; icon: typeof TrendingUp }[] = [
-    { key: 'hoy',       label: 'Hoy',         icon: Clock        },
-    { key: 'ventas',    label: 'Ventas',       icon: ShoppingBag  },
-    { key: 'comisiones',label: 'Comisiones',   icon: Users        },
+    { key: 'hoy',        label: 'Hoy',        icon: Clock       },
+    { key: 'ventas',     label: 'Ventas',      icon: ShoppingBag },
+    { key: 'comisiones', label: 'Comisiones',  icon: Users       },
+    { key: 'productos',  label: 'Productos',   icon: Package     },
   ]
 
   return (
@@ -438,6 +440,7 @@ export default function AdminPage() {
             {tab === 'hoy'        && <HoyTab        sales={recentSales} />}
             {tab === 'ventas'     && <VentasTab      sales={recentSales} />}
             {tab === 'comisiones' && <ComisionesTab  sales={recentSales} />}
+            {tab === 'productos'  && <ProductCMS />}
           </div>
         </>
       )}
