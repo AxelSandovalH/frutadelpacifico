@@ -212,8 +212,8 @@ export default function CartSidebar() {
             </div>
 
             <Link href="/checkout" onClick={() => setOpen(false)} className="block">
-              <Button variant="whatsapp" fullWidth size="lg">
-                💬 Pedir por WhatsApp
+              <Button variant="primary" fullWidth size="lg">
+                💳 Proceder al pago
               </Button>
             </Link>
 
