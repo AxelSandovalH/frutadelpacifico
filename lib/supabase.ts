@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import type { POSSaleRecord } from '@/types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -166,4 +167,95 @@ export async function createOrder(data: {
 
   if (itemsError) return { success: false, error: itemsError }
   return { success: true, orderId: order.id }
+}
+
+// ── POS ───────────────────────────────────────────────────────────────────────
+/*  SQL — ejecutar en Supabase SQL Editor:
+
+create table pos_sales (
+  id            uuid primary key,
+  user_id       text not null,
+  user_name     text not null,
+  user_role     text not null,
+  subtotal      numeric(10,2) not null,
+  discount      numeric(10,2) default 0,
+  total         numeric(10,2) not null,
+  payment_method text not null,
+  commission    numeric(10,2) default 0,
+  created_at    timestamptz default now()
+);
+
+create table pos_sale_items (
+  id           uuid primary key default gen_random_uuid(),
+  sale_id      uuid references pos_sales(id) on delete cascade,
+  product_id   text not null,
+  product_name text not null,
+  quantity     integer not null,
+  unit_price   numeric(10,2) not null,
+  subtotal     numeric(10,2) not null
+);
+*/
+
+export async function savePOSSale(sale: POSSaleRecord) {
+  if (!supabase) return { success: false, error: 'Supabase not configured' }
+
+  const { error: saleError } = await supabase.from('pos_sales').insert({
+    id:             sale.id,
+    user_id:        sale.userId,
+    user_name:      sale.userName,
+    user_role:      sale.userRole,
+    subtotal:       sale.subtotal,
+    discount:       sale.discount,
+    total:          sale.total,
+    payment_method: sale.paymentMethod,
+    commission:     sale.commission,
+    created_at:     sale.createdAt,
+  })
+
+  if (saleError) return { success: false, error: saleError }
+
+  const saleItems = sale.items.map((item) => ({
+    sale_id:      sale.id,
+    product_id:   item.productId,
+    product_name: item.productName,
+    quantity:     item.quantity,
+    unit_price:   item.unitPrice,
+    subtotal:     item.subtotal,
+  }))
+
+  const { error: itemsError } = await supabase.from('pos_sale_items').insert(saleItems)
+  if (itemsError) return { success: false, error: itemsError }
+  return { success: true }
+}
+
+export async function getPOSSales(): Promise<POSSaleRecord[]> {
+  if (!supabase) return []
+
+  const { data, error } = await supabase
+    .from('pos_sales')
+    .select('*, pos_sale_items(*)')
+    .order('created_at', { ascending: false })
+    .limit(500)
+
+  if (error || !data) return []
+
+  return data.map((s: any) => ({
+    id:            s.id,
+    userId:        s.user_id,
+    userName:      s.user_name,
+    userRole:      s.user_role,
+    subtotal:      s.subtotal,
+    discount:      s.discount,
+    total:         s.total,
+    paymentMethod: s.payment_method,
+    commission:    s.commission,
+    createdAt:     s.created_at,
+    items: (s.pos_sale_items ?? []).map((i: any) => ({
+      productId:   i.product_id,
+      productName: i.product_name,
+      quantity:    i.quantity,
+      unitPrice:   i.unit_price,
+      subtotal:    i.subtotal,
+    })),
+  }))
 }

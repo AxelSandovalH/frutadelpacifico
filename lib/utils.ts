@@ -33,3 +33,5 @@ export function getShippingMessage(total: number): string {
   if (total >= FREE_SHIPPING_THRESHOLD) return '🎉 ¡Tienes entrega gratis!'
   return `Te faltan ${formatPrice(remaining)} para entrega gratis`
 }
+
+export const COMMISSION_RATE = 0.15

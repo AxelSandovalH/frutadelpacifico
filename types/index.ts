@@ -96,3 +96,41 @@ export interface Recipe {
   category: 'snack' | 'bebida' | 'coctel' | 'platillo'
   products: string[]
 }
+
+// ── POS ───────────────────────────────────────────────────────────────────────
+export type PaymentMethod = 'efectivo' | 'transferencia'
+export type UserRole    = 'owner' | 'collaborator'
+
+export interface POSUser {
+  id:   string
+  name: string
+  role: UserRole
+}
+
+export interface POSCartItem {
+  productId: string
+  product:   Product
+  quantity:  number
+}
+
+export interface POSSaleItem {
+  productId:   string
+  productName: string
+  quantity:    number
+  unitPrice:   number
+  subtotal:    number
+}
+
+export interface POSSaleRecord {
+  id:          string
+  userId:      string
+  userName:    string
+  userRole:    UserRole
+  items:       POSSaleItem[]
+  subtotal:    number
+  discount:    number
+  total:       number
+  paymentMethod: PaymentMethod
+  commission:  number
+  createdAt:   string
+}
