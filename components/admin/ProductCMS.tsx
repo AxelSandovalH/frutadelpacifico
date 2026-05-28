@@ -13,6 +13,7 @@ type Override = {
   inStock?:     boolean
   imageUrl?:    string
   description?: string
+  cost?:        number
 }
 
 type Merged = Product & { _ov?: Override }
@@ -55,6 +56,7 @@ export function ProductCMS() {
       inStock:     ov.inStock     ?? p.inStock,
       imageUrl:    ov.imageUrl    ?? p.image,
       description: ov.description ?? p.description,
+      cost:        ov.cost,
     })
     setSaved(false)
   }
@@ -126,6 +128,13 @@ export function ProductCMS() {
               {p.inStock ? <Eye size={11} /> : <EyeOff size={11} />}
               {p.inStock ? 'En venta' : 'Oculto'}
             </div>
+            {(() => {
+              const cost = overrides[p.id]?.cost
+              if (!cost || cost <= 0) return null
+              const margin = ((p.price - cost) / p.price) * 100
+              const color = margin >= 40 ? 'text-green-600' : margin >= 20 ? 'text-amber-500' : 'text-red-500'
+              return <p className={`text-[11px] font-bold mt-0.5 ${color}`}>{margin.toFixed(0)}% margen</p>
+            })()}
           </button>
         ))}
       </div>
@@ -194,6 +203,50 @@ export function ProductCMS() {
                     className="w-full pl-9 pr-4 py-4 rounded-xl border border-stone-200 text-2xl font-black text-stone-900 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
                   />
                 </div>
+              </div>
+
+              {/* Cost + live margin */}
+              <div>
+                <label className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 block">Costo por unidad</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-lg">$</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={editState.cost ?? ''}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value)
+                      setEditState((s) => ({ ...s, cost: isNaN(val) ? undefined : val }))
+                    }}
+                    placeholder="0"
+                    className="w-full pl-9 pr-4 py-4 rounded-xl border border-stone-200 text-2xl font-black text-stone-900 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
+                  />
+                </div>
+                {(() => {
+                  const price  = editState.price  ?? 0
+                  const cost   = editState.cost   ?? 0
+                  if (price <= 0 || cost <= 0) return null
+                  const profit = price - cost
+                  const margin = (profit / price)  * 100
+                  const markup = (profit / cost)   * 100
+                  const marginColor = margin >= 40 ? 'text-green-600' : margin >= 20 ? 'text-amber-500' : 'text-red-500'
+                  return (
+                    <div className="mt-3 bg-stone-50 rounded-2xl px-4 py-3 grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="text-[10px] text-stone-400 font-semibold uppercase tracking-wide">Ganancia</p>
+                        <p className="text-base font-black text-stone-900">{formatPrice(profit)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-stone-400 font-semibold uppercase tracking-wide">Margen</p>
+                        <p className={`text-base font-black ${marginColor}`}>{margin.toFixed(1)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-stone-400 font-semibold uppercase tracking-wide">Markup</p>
+                        <p className="text-base font-black text-stone-900">{markup.toFixed(1)}%</p>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* In stock */}

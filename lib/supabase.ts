@@ -237,11 +237,15 @@ create table product_settings (
   in_stock    boolean,
   image_url   text,
   description text,
+  cost        numeric(10,2),
   updated_at  timestamptz default now()
 );
 alter table product_settings enable row level security;
 create policy "public read" on product_settings for select using (true);
 create policy "allow all"   on product_settings for all    using (true) with check (true);
+
+-- Si la tabla ya existe, agregar la columna cost:
+-- alter table product_settings add column if not exists cost numeric(10,2);
 */
 
 export type ProductOverride = {
@@ -249,6 +253,7 @@ export type ProductOverride = {
   inStock?:     boolean
   imageUrl?:    string
   description?: string
+  cost?:        number
 }
 
 export async function getProductSettings(): Promise<Record<string, ProductOverride>> {
@@ -263,6 +268,7 @@ export async function getProductSettings(): Promise<Record<string, ProductOverri
         ...(s.in_stock    != null && { inStock:     s.in_stock }),
         ...(s.image_url   != null && { imageUrl:    s.image_url }),
         ...(s.description != null && { description: s.description }),
+        ...(s.cost        != null && { cost:        s.cost }),
       },
     ])
   )
@@ -277,6 +283,7 @@ export async function saveProductSetting(productId: string, updates: ProductOver
       in_stock:    updates.inStock,
       image_url:   updates.imageUrl,
       description: updates.description,
+      cost:        updates.cost ?? null,
       updated_at:  new Date().toISOString(),
     },
     { onConflict: 'product_id' }
