@@ -3,14 +3,15 @@
 import { useState, useEffect, useMemo } from 'react'
 import { usePOS }    from '@/store/usePOS'
 import { formatPrice } from '@/lib/utils'
-import { ProductCMS } from '@/components/admin/ProductCMS'
+import { ProductCMS }  from '@/components/admin/ProductCMS'
+import { InsumosCMS } from '@/components/admin/InsumosCMS'
 import type { POSSaleRecord, PaymentMethod } from '@/types'
 import {
   LogOut, TrendingUp, ShoppingBag, Users,
-  Clock, Banknote, Smartphone, ArrowLeft, Package,
+  Clock, Banknote, Smartphone, ArrowLeft, Package, FlaskConical,
 } from 'lucide-react'
 
-type Tab = 'hoy' | 'ventas' | 'comisiones' | 'productos'
+type Tab = 'hoy' | 'ventas' | 'comisiones' | 'insumos' | 'productos'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function sameDay(dateStr: string, ref: Date): boolean {
@@ -369,10 +370,11 @@ export default function AdminPage() {
   if (!mounted) return null
 
   const tabs: { key: Tab; label: string; icon: typeof TrendingUp }[] = [
-    { key: 'hoy',        label: 'Hoy',        icon: Clock       },
-    { key: 'ventas',     label: 'Ventas',      icon: ShoppingBag },
-    { key: 'comisiones', label: 'Comisiones',  icon: Users       },
-    { key: 'productos',  label: 'Productos',   icon: Package     },
+    { key: 'hoy',        label: 'Hoy',        icon: Clock         },
+    { key: 'ventas',     label: 'Ventas',      icon: ShoppingBag   },
+    { key: 'comisiones', label: 'Comisiones',  icon: Users         },
+    { key: 'insumos',    label: 'Insumos',     icon: FlaskConical  },
+    { key: 'productos',  label: 'Productos',   icon: Package       },
   ]
 
   return (
@@ -440,6 +442,7 @@ export default function AdminPage() {
             {tab === 'hoy'        && <HoyTab        sales={recentSales} />}
             {tab === 'ventas'     && <VentasTab      sales={recentSales} />}
             {tab === 'comisiones' && <ComisionesTab  sales={recentSales} />}
+            {tab === 'insumos'    && <InsumosCMS />}
             {tab === 'productos'  && <ProductCMS />}
           </div>
         </>

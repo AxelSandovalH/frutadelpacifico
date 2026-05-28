@@ -228,6 +228,70 @@ export async function savePOSSale(sale: POSSaleRecord) {
   return { success: true }
 }
 
+// ── Insumos ───────────────────────────────────────────────────────────────────
+/*  SQL — ejecutar en Supabase SQL Editor:
+
+create table insumos (
+  id             text primary key,
+  name           text not null,
+  unit           text not null,
+  price_per_unit numeric(12,6) not null default 0,
+  notes          text,
+  updated_at     timestamptz default now()
+);
+alter table insumos enable row level security;
+create policy "public read" on insumos for select using (true);
+create policy "allow all"   on insumos for all    using (true) with check (true);
+*/
+
+export type Insumo = {
+  id:           string
+  name:         string
+  unit:         string
+  pricePerUnit: number
+  notes?:       string
+}
+
+export type RecipeItem = {
+  insumoId: string
+  quantity: number
+}
+
+export async function getInsumos(): Promise<Insumo[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase.from('insumos').select('*').order('name')
+  if (error || !data) return []
+  return data.map((i: any) => ({
+    id:           i.id,
+    name:         i.name,
+    unit:         i.unit,
+    pricePerUnit: i.price_per_unit,
+    ...(i.notes != null && { notes: i.notes }),
+  }))
+}
+
+export async function saveInsumo(insumo: Insumo): Promise<{ success: boolean; error?: any }> {
+  if (!supabase) return { success: false }
+  const { error } = await supabase.from('insumos').upsert(
+    {
+      id:             insumo.id,
+      name:           insumo.name,
+      unit:           insumo.unit,
+      price_per_unit: insumo.pricePerUnit,
+      notes:          insumo.notes ?? null,
+      updated_at:     new Date().toISOString(),
+    },
+    { onConflict: 'id' }
+  )
+  return { success: !error, error }
+}
+
+export async function deleteInsumo(id: string): Promise<{ success: boolean }> {
+  if (!supabase) return { success: false }
+  const { error } = await supabase.from('insumos').delete().eq('id', id)
+  return { success: !error }
+}
+
 // ── CMS: product overrides ────────────────────────────────────────────────────
 /*  SQL — ejecutar en Supabase SQL Editor:
 
@@ -238,14 +302,16 @@ create table product_settings (
   image_url   text,
   description text,
   cost        numeric(10,2),
+  recipe      jsonb,
   updated_at  timestamptz default now()
 );
 alter table product_settings enable row level security;
 create policy "public read" on product_settings for select using (true);
 create policy "allow all"   on product_settings for all    using (true) with check (true);
 
--- Si la tabla ya existe, agregar la columna cost:
--- alter table product_settings add column if not exists cost numeric(10,2);
+-- Si la tabla ya existe, agregar las columnas:
+-- alter table product_settings add column if not exists cost   numeric(10,2);
+-- alter table product_settings add column if not exists recipe jsonb;
 */
 
 export type ProductOverride = {
@@ -254,6 +320,7 @@ export type ProductOverride = {
   imageUrl?:    string
   description?: string
   cost?:        number
+  recipe?:      RecipeItem[]
 }
 
 export async function getProductSettings(): Promise<Record<string, ProductOverride>> {
@@ -269,6 +336,7 @@ export async function getProductSettings(): Promise<Record<string, ProductOverri
         ...(s.image_url   != null && { imageUrl:    s.image_url }),
         ...(s.description != null && { description: s.description }),
         ...(s.cost        != null && { cost:        s.cost }),
+        ...(s.recipe      != null && { recipe:      s.recipe }),
       },
     ])
   )
@@ -283,7 +351,8 @@ export async function saveProductSetting(productId: string, updates: ProductOver
       in_stock:    updates.inStock,
       image_url:   updates.imageUrl,
       description: updates.description,
-      cost:        updates.cost ?? null,
+      cost:        updates.cost   ?? null,
+      recipe:      updates.recipe ?? null,
       updated_at:  new Date().toISOString(),
     },
     { onConflict: 'product_id' }
