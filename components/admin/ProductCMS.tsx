@@ -25,6 +25,7 @@ export function ProductCMS() {
   const [editState,       setEditState]       = useState<Override>({})
   const [saving,          setSaving]          = useState(false)
   const [saved,           setSaved]           = useState(false)
+  const [saveError,       setSaveError]       = useState(false)
   const [imageUploading,  setImageUploading]  = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -64,11 +65,16 @@ export function ProductCMS() {
   async function handleSave() {
     if (!editing) return
     setSaving(true)
+    setSaveError(false)
     const result = await saveProductSetting(editing.id, editState)
     if (result.success) {
       setOverrides((prev) => ({ ...prev, [editing.id]: { ...editState } }))
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
+    } else {
+      setSaveError(true)
+      setTimeout(() => setSaveError(false), 3000)
+      console.error('[ProductCMS] save failed:', result.error)
     }
     setSaving(false)
   }
@@ -280,13 +286,16 @@ export function ProductCMS() {
                 disabled={saving || saved}
                 className={[
                   'w-full py-4 rounded-2xl font-black text-base transition-all',
-                  saved   ? 'bg-green-500 text-white'
-                  : saving ? 'bg-stone-200 text-stone-400'
+                  saved      ? 'bg-green-500 text-white'
+                  : saveError ? 'bg-red-500 text-white'
+                  : saving    ? 'bg-stone-200 text-stone-400'
                   : 'bg-orange-500 text-white active:bg-orange-600 shadow-lg shadow-orange-200',
                 ].join(' ')}
               >
                 {saved
                   ? <span className="flex items-center justify-center gap-2"><Check size={18} /> ¡Guardado!</span>
+                  : saveError
+                    ? <span className="flex items-center justify-center gap-2"><X size={18} /> Error al guardar</span>
                   : saving
                     ? <span className="flex items-center justify-center gap-2"><Loader2 size={18} className="animate-spin" /> Guardando…</span>
                     : <span className="flex items-center justify-center gap-2"><Save size={18} /> Guardar cambios</span>
